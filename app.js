@@ -13,6 +13,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var orderRouter = require('./routes/order');
 var newsRouter =require('./routes/news');
+var transactionRouter = require('./routes/transaction');
 var app = express();
  //// ejs 
 
@@ -34,23 +35,26 @@ mongoos.connect('mongodb://127.0.0.1/shooping')
     console.error('Error connecting to MongoDB:', err);
   });
 
-
-app.use(express.urlencoded({extended :true}));
+app.use(cors());
+app.disable("x-powered-by");
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname,'orderImage')));
 app.use(express.static(path.join(__dirname,'userImage')));
 app.use(express.static(path.join(__dirname,'newsImage')));
 
 /////////
-app.use(cors());
+
 //////////
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/order',orderRouter);
 app.use('/news',newsRouter);
+app.use('/transaction',transactionRouter);
 ////////////
 
 

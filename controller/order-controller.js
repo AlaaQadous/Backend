@@ -1,8 +1,6 @@
 const Order = require('../models/order');
 const multer = require('multer');
 
-
-
 /////////////////addorder
 const filefilter = function (req, file, cb) {
     if (file.mimetype === 'image/jpeg') {
@@ -35,11 +33,9 @@ const uploadMiddleware = upload.single('myfile');
 const addOrder = function (req, res, next) {
     uploadMiddleware(req, res, function (err) {
         if (err) {
-            // Handle multer error (e.g., file type not allowed, file size exceeded)
             return res.status(400).json({ message: 'File upload error', error: err.message });
         }
 
-        // Continue processing the request
         console.log(req.file);
         const order = new Order({
             description: req.body.description,
@@ -139,7 +135,7 @@ deleteOrder = function (req, res, next) {
 ///updateOrder ( confirmed true)
 updateOrder = function (req, res, next) {
     const order = {
-        confirmed : req.body.confirmed ,
+        confirmed : 'true' ,
         
     };
     Order.findOneAndUpdate({ _id: req.params.orderId }, { $set: order }, { new: true }).
@@ -161,6 +157,34 @@ updateOrder = function (req, res, next) {
             });
         });
 };
+updateinfo = function (req, res, next) {
+    const { comment, price, DeliveryDate } = req.body; 
+
+    const order = {
+        comment: comment,
+        price: price,
+        DeliveryDate: DeliveryDate,
+    };
+
+    Order.findOneAndUpdate({ _id: req.params.orderID }, { $set: order }, { new: true })
+        .then(result => {
+            if (!result) {
+                return res.status(404).json({
+                    message: "Order not found"
+                });
+            }
+            res.status(200).json({
+                message: "Order updated",
+                updatedOrder: result
+            });
+        })
+        .catch(err => {
+            res.status(500).json({
+                message: "Internal server error",
+                error: err
+            });
+        });
+};
 
 module.exports = {
     addOrder: addOrder,
@@ -168,4 +192,5 @@ module.exports = {
     getallbyID: getallbyID,
     deleteOrder: deleteOrder,
     updateOrder: updateOrder,
+    updateinfo,
 }

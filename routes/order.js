@@ -8,12 +8,12 @@ router.post('/addOrder',cotrol.addOrder) //done
 router.get('/',cotrol.getAll); //done
 //////////يرحعلي حسب الid
 router.get('/:orderID', cotrol.getallbyID); //done 
-//////////update  
+//////////confirmed
 router.patch("/:orderId", cotrol.updateOrder); //done
 /////////delete 
 router.delete('/:orderId', cotrol.deleteOrder); //done
-
-
+///add informaion by employee
+router.patch("/info/:orderID",cotrol.updateinfo);//done
 
 
 

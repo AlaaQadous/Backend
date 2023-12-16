@@ -1,20 +1,60 @@
 const { default: mongoose } = require('mongoose');
-const mongoos = require('mongoose');
-const userSchema = mongoos.Schema({
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+require('dotenv').config();
+
+const userSchema = mongoose.Schema({
     userName :{
         type :String , 
         required :true,
-    } ,
+        max: 25,
+    }
+     ,
     password :{
         type:String ,
-        required:true 
+        required:true ,
+
     },
     email:{
         type:String,
-        required:true
+        required:true,
+        unique: true,
     },
     image:{
         type:String,
     },
+  
+      isAdmin :{
+        type:Boolean,
+        default:false ,
+      },
+      bio: String,
 })
+userSchema.pre("save", function (next) {
+  const user = this;
+
+  if (!user.isModified("password")) return next();
+  bcrypt.genSalt(10, (err, salt) => {
+      if (err) return next(err);
+
+      bcrypt.hash(user.password, salt, (err, hash) => {
+          if (err) return next(err);
+
+          user.password = hash;
+          next();
+      });
+  });
+});
+
+userSchema.methods.generateAccessJWT = function () {
+    let payload = {
+      id: this._id,
+     isAdmin :this.isAdmin,
+    };
+    return jwt.sign(payload,process.env.SECRET_ACCESS_TOKEN, {
+      expiresIn: '20m',
+    });
+
+  };
+  
 module.exports = mongoose.model('user',userSchema);
