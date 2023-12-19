@@ -27,6 +27,8 @@ const upload = multer({
     fileFilter: filefilter,
 });
 const uploadMiddleware = upload.single('myfile');
+
+
 const addnews = function (req, res, next) {
     uploadMiddleware(req, res, function (err) {
         if (err) {
@@ -40,8 +42,8 @@ const addnews = function (req, res, next) {
         console.log(req.file);
         const news = new News({
             description: req.body.description,
-            price :req.body.price,
             image: req.file.path,
+
         });
 
         news.save()
@@ -62,19 +64,15 @@ const addnews = function (req, res, next) {
 ///////////////////view all 
 getAll = function (req, res, next) {
     News.find().
-        select('_id description  price image ').
+        select('_id description  image ').
         then(doc => {
             const response = {
                 doc: doc.map(doc => {
                     return {
                         description: doc.description,
-                        price: doc.price,
                         image: doc.image,
                         _id: doc._id,
-                        url: {
-                            type: 'GET',
-                            urls: 'localhost:3000/news/' + doc._id
-                        }
+                      
                     }
                 })
             }
@@ -131,10 +129,54 @@ deleteNews = function (req, res, next) {
             });
         });
 };
+ 
+const updateNewsById = function (req, res, next) {
+    const newsId = req.params.id;
+
+    uploadMiddleware(req, res, function (err) {
+        if (err) {
+            return res.status(400).json({
+                message: 'File upload error',
+                error: err.message
+            });
+        }
+
+        console.log(req.file);
+
+        const updateFields = {
+            description: req.body.description,
+        };
+
+        if (req.file && req.file.path) {
+            updateFields.image = req.file.path;
+        }
+
+        News.findByIdAndUpdate(newsId, updateFields, { new: true })
+            .then(updatedNews => {
+                if (!updatedNews) {
+                    return res.status(404).json({
+                        message: 'News not found'
+                    });
+                }
+
+                res.status(200).json({
+                    message: 'News updated successfully',
+                    updatedNews: updatedNews
+                });
+            })
+            .catch(err => {
+                res.status(500).json({
+                    message: err.message
+                });
+            });
+    });
+};
+
 
 module.exports = {
     addnews:addnews,
     getAll : getAll ,
     getallbyID: getallbyID ,
     deleteNews: deleteNews,
+    updateNewsById,
 };

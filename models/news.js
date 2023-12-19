@@ -1,7 +1,7 @@
 const { default: mongoose } = require('mongoose');
 const mongoos = require('mongoose');
 const newsSchema = mongoos.Schema({ 
-
+  
 image :{
     type : String ,
 } ,
@@ -14,7 +14,7 @@ date: {
 },
 price :{
     type:Number ,
-} ,
+},
 state:{
     type:String ,
     default : "visible",

@@ -1,3 +1,4 @@
+const { getRounds } = require('bcrypt');
 const Order = require('../models/order');
 const multer = require('multer');
 
@@ -42,6 +43,7 @@ const addOrder = function (req, res, next) {
             material: req.body.material,
             size: req.body.size,
             image: req.file.path,
+            //user :req.user.id,
         });
 
         order.save()
@@ -62,8 +64,11 @@ const addOrder = function (req, res, next) {
 
 //get all in database
 getAll = function (req, res, next) {
-    Order.find().
-        select('_id description  size image ').
+    Order.find({
+        state: 'New',
+    }
+    ).
+        select('_id description  size image date material').
         then(doc => {
             const response = {
                 doc: doc.map(doc => {
@@ -72,10 +77,9 @@ getAll = function (req, res, next) {
                         size: doc.size,
                         image: doc.image,
                         _id: doc._id,
-                        url: {
-                            type: 'GET',
-                            urls: 'localhost:3000/order/' + doc._id
-                        }
+                        date:doc.date,
+                        material:doc.material,
+
                     }
                 })
             }
@@ -93,23 +97,36 @@ getAll = function (req, res, next) {
 //////getallbyID 
 getallbyID = function (req, res, next) {
     Order.find({ _id: req.params.orderID })
-        .then(doc => {
-            if (doc && doc.length > 0) {
-                res.status(200).json({
-                    order: doc
-                });
-            } else {
-                res.status(404).json({
-                    message: 'Order not found'
-                });
-            }
-        })
-        .catch(err => {
-            res.status(500).json({
-                message: 'Internal Server Error',
-                error: err
-            });
+    .select('_id description image date price DeliveryDate state comment ')
+    .then(doc => {
+        console.log('Retrieved Orders:', doc);
+
+        const response = {
+            doc: doc.map(doc => {
+                return {
+                    description: doc.description,
+                    image: doc.image,
+                    _id: doc._id,
+                    date: doc.date,
+                    DeliveryDate: doc.DeliveryDate,
+                    price: doc.price,
+                    state:doc.state,
+                    comment:doc.comment, 
+                }
+            })
+        }
+
+        res.status(200).json({
+            order: response
         });
+    })
+    .catch(err => {
+        console.error('Error Retrieving Orders:', err);
+
+        res.status(404).json({
+            message: err
+        });
+    });
 };
 ////deleteOrder 
 deleteOrder = function (req, res, next) {
@@ -136,7 +153,6 @@ deleteOrder = function (req, res, next) {
 updateOrder = function (req, res, next) {
     const order = {
         confirmed : 'true' ,
-        
     };
     Order.findOneAndUpdate({ _id: req.params.orderId }, { $set: order }, { new: true }).
         then(result => {
@@ -164,6 +180,7 @@ updateinfo = function (req, res, next) {
         comment: comment,
         price: price,
         DeliveryDate: DeliveryDate,
+        state:"InProgress",
     };
 
     Order.findOneAndUpdate({ _id: req.params.orderID }, { $set: order }, { new: true })
@@ -186,6 +203,43 @@ updateinfo = function (req, res, next) {
         });
 };
 
+getReady = function (req, res, next) {
+    Order.find({ state: 'Ready' })
+        .populate('user', 'userName')
+        .select('_id description image date price DeliveryDate user ')
+        .then(doc => {
+            console.log('Retrieved Orders:', doc);
+
+            const response = {
+                doc: doc.map(doc => {
+                    return {
+                        description: doc.description,
+                        image: doc.image,
+                        _id: doc._id,
+                        date: doc.date,
+                        DeliveryDate: doc.DeliveryDate,
+                        price: doc.price,
+                        user: doc.user ? doc.user.userName : null,
+                    }
+                })
+            }
+
+            res.status(200).json({
+                order: response
+            });
+        })
+        .catch(err => {
+            console.error('Error Retrieving Orders:', err);
+
+            res.status(404).json({
+                message: err
+            });
+        });
+};
+
+
+
+
 module.exports = {
     addOrder: addOrder,
     getAll: getAll,
@@ -193,4 +247,6 @@ module.exports = {
     deleteOrder: deleteOrder,
     updateOrder: updateOrder,
     updateinfo,
+    getReady,
+   
 }

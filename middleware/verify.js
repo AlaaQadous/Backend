@@ -1,17 +1,15 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const User = require('../models/users');
 
 
 function Verify(req, res, next) {
-  const authHeader = req.headers.cookie; // get the session cookie from the request header
+  const authHeader = req.headers.cookie; 
 
   if (authHeader) {
-    const token = authHeader.split(" ")[1]; // If there is, split the cookie string to get the actual JWT token
+    const token = authHeader.split(" ")[1];
     console.log("Token:", token);
-
     try {
-        const decodedPayLoad = jwt.verify(token, process.env.SECRET_ACCESS_TOKEN, { ignoreExpiration: false });
+        const decodedPayLoad = jwt.verify(token, process.env.SECRET_ACCESS_TOKEN);
         console.log("Decoded Payload:", decodedPayLoad);
 
       req.user = decodedPayLoad;
@@ -37,6 +35,17 @@ function verifyAdmin(req,res,next){
         }
     })
 }
+function verifyEmployee(req,res,next){
+    Verify(req,res,()=>{
+        if(req.user.role === "employee"){
+            next();
+        }else{
+            return res.status(403).json({
+                message:"Not Allowed,Only Employee"
+            })
+        }
+    })
+}
 function verifUser(req,res,next){
     Verify(req,res,()=>{
         if(req.user.id === req.params.id){
@@ -52,5 +61,6 @@ function verifUser(req,res,next){
 module.exports ={
     Verify,
     verifyAdmin,
-    verifUser
+    verifUser,
+    verifyEmployee,
 }

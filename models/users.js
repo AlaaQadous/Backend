@@ -23,12 +23,16 @@ const userSchema = mongoose.Schema({
     image:{
         type:String,
     },
-  
       isAdmin :{
         type:Boolean,
         default:false ,
       },
       bio: String,
+      role: {
+        type: String,
+        enum: ['user', 'employee'],
+        default: 'user',
+    },
 })
 userSchema.pre("save", function (next) {
   const user = this;
@@ -52,7 +56,7 @@ userSchema.methods.generateAccessJWT = function () {
      isAdmin :this.isAdmin,
     };
     return jwt.sign(payload,process.env.SECRET_ACCESS_TOKEN, {
-      expiresIn: '20m',
+      expiresIn: '40m',
     });
 
   };
