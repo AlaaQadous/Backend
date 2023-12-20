@@ -33,15 +33,12 @@ const orderSchema = mongoos.Schema({
     }, 
     comment: {
         type: String,
-        required: true,
       },
       price: {
         type: Number,
-        required: true,
       },
       DeliveryDate : {
         type: Date,
-        required: true,
       },
  
 

@@ -36,7 +36,6 @@ const addOrder = function (req, res, next) {
         if (err) {
             return res.status(400).json({ message: 'File upload error', error: err.message });
         }
-
         console.log(req.file);
         const order = new Order({
             description: req.body.description,
@@ -204,6 +203,7 @@ updateinfo = function (req, res, next) {
 };
 
 getReady = function (req, res, next) {
+
     Order.find({ state: 'Ready' })
         .populate('user', 'userName')
         .select('_id description image date price DeliveryDate user ')
@@ -235,11 +235,83 @@ getReady = function (req, res, next) {
                 message: err
             });
         });
+    
 };
 
 
+getOr = function (req, res, next) {
 
+    Order.find({ 
+        state: { $in: ['Ready', 'InProgress'] }
+         })
+        .populate('user', 'userName')
+        .select('_id description image date price DeliveryDate user ')
+        .then(doc => {
+            console.log('Retrieved Orders:', doc);
 
+            const response = {
+                doc: doc.map(doc => {
+                    return {
+                        description: doc.description,
+                        image: doc.image,
+                        _id: doc._id,
+                        date: doc.date,
+                        DeliveryDate: doc.DeliveryDate,
+                        price: doc.price,
+                        user: doc.user ? doc.user.userName : null,
+                    }
+                })
+            }
+
+            res.status(200).json({
+                order: response
+            });
+        })
+        .catch(err => {
+            console.error('Error Retrieving Orders:', err);
+
+            res.status(404).json({
+                message: err
+            });
+        });
+    
+};
+
+getOrderEmpl = function (req, res, next) {
+
+    Order.find({ 
+        state: { $in: ['New'] },
+        confirmed:'true',
+         })
+        .select('_id description image  size material  ')
+        .then(doc => {
+            console.log('Retrieved Orders:', doc);
+
+            const response = {
+                doc: doc.map(doc => {
+                    return {
+                        description: doc.description,
+                        image: doc.image,
+                        _id: doc._id,
+                       materail: doc.materail,
+                       size:doc.size,
+                    }
+                })
+            }
+
+            res.status(200).json({
+                order: response
+            });
+        })
+        .catch(err => {
+            console.error('Error Retrieving Orders:', err);
+
+            res.status(404).json({
+                message: err
+            });
+        });
+    
+};
 module.exports = {
     addOrder: addOrder,
     getAll: getAll,
@@ -248,5 +320,7 @@ module.exports = {
     updateOrder: updateOrder,
     updateinfo,
     getReady,
+    getOr,
+    getOrderEmpl,
    
 }

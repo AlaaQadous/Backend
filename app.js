@@ -13,7 +13,6 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var orderRouter = require('./routes/order');
 var newsRouter =require('./routes/news');
-var transactionRouter = require('./routes/transaction');
 var app = express();
  //// ejs 
 
@@ -54,7 +53,6 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/order',orderRouter);
 app.use('/news',newsRouter);
-app.use('/transaction',transactionRouter);
 ////////////
 
 

@@ -4,6 +4,7 @@ const cotrol = require('../controller/user-control');
 const {Validate} = require('../middleware/validationResult.js');
 const {verifUser}=require('../middleware/verify.js');
 const {verifyAdmin}=require('../middleware/verify.js');
+const{verifyEmployee}=require('../middleware/verify.js');
 const {moo}=require('../middleware/validationResult.js');
 ////////signup
 router.post('/signup',Validate,cotrol.singup) //done
