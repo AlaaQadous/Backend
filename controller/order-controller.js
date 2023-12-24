@@ -32,9 +32,12 @@ const upload = multer({
 const uploadMiddleware = upload.single('myfile');
 
 const addOrder = function (req, res, next) {
-    uploadMiddleware(req, res, function (err) {
+    upload.single('myfile')(req, res, (err) => {
         if (err) {
-            return res.status(400).json({ message: 'File upload error', error: err.message });
+            console.log(err)
+          return res.status(404).json({
+            message: err.message
+          });
         }
         console.log(req.file);
         const order = new Order({
