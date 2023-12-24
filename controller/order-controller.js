@@ -42,7 +42,7 @@ const addOrder = function (req, res, next) {
             material: req.body.material,
             size: req.body.size,
             image: req.file.path,
-            //user :req.user.id,
+            user :req.user.id,
         });
 
         order.save()
@@ -180,6 +180,8 @@ updateinfo = function (req, res, next) {
         price: price,
         DeliveryDate: DeliveryDate,
         state:"InProgress",
+        user :req.user.id,
+
     };
 
     Order.findOneAndUpdate({ _id: req.params.orderID }, { $set: order }, { new: true })

@@ -28,7 +28,7 @@ const upload = multer({
   fileFilter: filefilter,
 });
 
-singup = function (req, res, next) {
+singup =   function (req, res, next) {
   // Check if the user already exists
   User.find({ userName: req.body.username }).then(result => {
     if (result.length < 1) {
@@ -40,7 +40,7 @@ singup = function (req, res, next) {
         }
         const user = new User({
           userName: req.body.username,
-          password: req.body.password, // Store plaintext password
+          password: req.body.password, 
           email: req.body.email,
           image: req.file.path,
         });
@@ -50,17 +50,20 @@ singup = function (req, res, next) {
             message: 'User created'
           });
         }).catch(err => {
+
           res.status(404).json({
             message: err.message
           });
         });
       });
     } else {
+
       res.status(404).json({
         message: "This user already exists"
       });
     }
   }).catch(err => {
+
     res.status(404).json({
       message: err.message
     });
@@ -71,7 +74,6 @@ signin = async function (req, res, next) {
   // Get variables for the login process
   const { email } = req.body;
   try {
-    // Check if user exists
     const user = await User.findOne({ email }).select("+password");
     if (!user)
       return res.status(401).json({
@@ -79,29 +81,27 @@ signin = async function (req, res, next) {
         data: [],
         message: "Account does not exist",
       });
-    // if user exists
-    // validate password
-    const isPasswordValid = bcrypt.compare(
-      `${req.body.password}`,
-      user.password
-    );
-    // if not valid, return unathorized response
-    if (!isPasswordValid)
-      return res.status(401).json({
-        status: "failed",
-        data: [],
-        message:
-          "Invalid email or password. Please try again with the correct credentials.",
-      });
-
+   
+    console.log("Password from request:", req.body.password);
+    const isPasswordValid = await bcrypt.compare(req.body.password, user.password);   
+      if (!isPasswordValid) {
+        console.error("Invalid password");
+        return res.status(401).json({
+           status: "failed",
+           data: [],
+           message: "Invalid email or password. Please try again with the correct credentials.",
+        });
+     }
     const token = user.generateAccessJWT(); // generate session token for user
     res.cookie('access_token', token, {
       httpOnly: true,
-      expires: new Date(Date.now() + 20 * 60 * 1000), // Set the expiration time in milliseconds
+      expires: new Date(Date.now() + 20 * 60 * 1000), 
     });
     res.status(200).json({
       status: "success",
-      message: "You have successfully logged in." + token,
+      token:  token,
+      role:user?.isAdmin?"admin":user.role,
+      
     });
   } catch (err) {
     res.status(500).json({

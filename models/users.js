@@ -55,10 +55,7 @@ userSchema.methods.generateAccessJWT = function () {
       id: this._id,
      isAdmin :this.isAdmin,
     };
-    return jwt.sign(payload,process.env.SECRET_ACCESS_TOKEN, {
-      expiresIn: '40m',
-    });
-
+    return jwt.sign(payload,process.env.SECRET_ACCESS_TOKEN);
   };
   
 module.exports = mongoose.model('user',userSchema);

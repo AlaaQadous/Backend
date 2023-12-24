@@ -2,31 +2,31 @@ var express = require('express');
 var router = express.Router();
 const cotrol = require('../controller/user-control');
 const {Validate} = require('../middleware/validationResult.js');
-const {verifUser}=require('../middleware/verify.js');
-const {verifyAdmin}=require('../middleware/verify.js');
-const{verifyEmployee}=require('../middleware/verify.js');
+const {verifUser}=require('../middleware/verifytoken.js');
+const {verifyAdmin}=require('../middleware/verifytoken.js');
+const{verifyEmployee}=require('../middleware/verifytoken.js');
 const {moo}=require('../middleware/validationResult.js');
+
 ////////signup
 router.post('/signup',Validate,cotrol.singup) //done
 /////////login
-router.get('/signin', Validate,cotrol.singin); //done
+router.post('/signin', Validate,cotrol.singin ); //done
+
 
 
 //view user profile for Admin
-router.route("/profilusers").get(cotrol.getAllUsers); //done
+router.route("/profilusers").get( verifyAdmin,cotrol.getAllUsers); //done
 ////// delete for Admin
-router.delete("/deleteuser/:id", cotrol.deleteByID); //done
+router.delete("/deleteuser/:id",verifyAdmin, cotrol.deleteByID); //done
 ///for Admin
-router.post("/addEmployee",cotrol.addEmployee);
+router.post("/addEmployee",verifyAdmin,cotrol.addEmployee);
 
-//logout
-router.get('/logout', cotrol.logout);
 
 
 //edit profile for user
 router.route("/profile/:id")
-.get(cotrol.getByID)
-.put( cotrol.updateByID);
+.get( verifUser,cotrol.getByID)
+.put(verifUser, cotrol.updateByID);
 
 
 

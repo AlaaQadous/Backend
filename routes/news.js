@@ -1,12 +1,13 @@
 var express = require('express');
 var router = express.Router();
 const cotrol = require('../controller/news-controller');
+const {verifyAdmin}=require('../middleware/verifytoken.js');
 
 //for Admin
-router.post('/addNews',cotrol.addnews) //done
-router.get('/',cotrol.getAll); //done
-router.delete('/:newsId', cotrol.deleteNews); //done
-router.patch('/update/:id',cotrol.updateNewsById); //done
+router.post('/addNews', verifyAdmin,cotrol.addnews) //done
+router.get('/', verifyAdmin,cotrol.getAll); //done
+router.delete('/:newsId',verifyAdmin, cotrol.deleteNews); //done
+router.patch('/update/:id', verifyAdmin,cotrol.updateNewsById); //done
 
 
 

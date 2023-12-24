@@ -2,26 +2,29 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 
-function Verify(req, res, next) {
-  const authHeader = req.headers.cookie; 
+ async function Verify(req, res, next) {
+  const authHeader = req.headers.token; 
 
-  if (authHeader) {
-    const token = authHeader.split(" ")[1];
-    console.log("Token:", token);
+  if (authHeader ) {
+    const token = authHeader.split("__")[1];
+
     try {
-        const decodedPayLoad = jwt.verify(token, process.env.SECRET_ACCESS_TOKEN);
+        console.log("Token:", token);
+
+        const decodedPayLoad = await jwt.verify(token,process.env.SECRET_ACCESS_TOKEN);
         console.log("Decoded Payload:", decodedPayLoad);
 
       req.user = decodedPayLoad;
       next();
     } catch (error) {
-      console.error("Token Verification Error:", error);
+      console.error("Token Verification Error:", error.stack);
       return res.status(401).json({ message: "Invalid token" });
     }
   } else {
     return res.status(401).json({ message: "No token provided" });
   }
 }
+
 
 
 function verifyAdmin(req,res,next){
@@ -35,9 +38,13 @@ function verifyAdmin(req,res,next){
         }
     })
 }
+
+
+
+
 function verifyEmployee(req,res,next){
     Verify(req,res,()=>{
-        if(req.user.role === "employee"){
+        if(req.user.role = "employee"){
             next();
         }else{
             return res.status(403).json({
@@ -48,7 +55,7 @@ function verifyEmployee(req,res,next){
 }
 function verifUser(req,res,next){
     Verify(req,res,()=>{
-        if(req.user.id === req.params.id){
+        if(req.user.role = "user"){
             next();
         }else{
             return res.status(403).json({

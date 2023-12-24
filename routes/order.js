@@ -1,31 +1,30 @@
 var express = require('express');
 var router = express.Router();
 const control = require('../controller/order-controller')
-const {verifUser}=require('../middleware/verify.js');
-const {verifyAdmin}=require('../middleware/verify.js');
-const{verifyEmployee}=require('../middleware/verify.js');
 const {moo}=require('../middleware/validationResult.js');
+const {verifUser}=require('../middleware/verifytoken.js');
+const {verifyAdmin}=require('../middleware/verifytoken.js');
+const{verifyEmployee}=require('../middleware/verifytoken.js');
 
 /////////////////addorder for customer
-router.post('/addOrder',control.addOrder) //done
+router.post('/addOrder', verifUser,control.addOrder) //done
 //////////يرحعلي حسب الid for customer
-router.get('/:orderID', control.getallbyID); //done 
+router.get('/:orderID',  verifUser,control.getallbyID); //done 
 
-router.get('/getStates',control.getOr); //for employee
-router.get('/getOrderEmpl',control.getOrderEmpl); // for employee
+router.get('/getStates', verifyEmployee,control.getOr); //for employee if inProcess or Ready
+router.get('/getOrderEmpl', verifyEmployee,control.getOrderEmpl); // for employee if new & confirm
 
-router.get('/getReady', control.getReady); //for admin
+router.get('/getReady',  verifyAdmin,control.getReady); //for admin
 
 ///Get all order from database if state is New  for admin
-router.get('/',control.getAll); //done
+router.get('/', verifyAdmin, control.getAll); //done
 
 //////////confirmed  for Admin
-router.patch("/:orderId", control.updateOrder); //done
+router.patch("/:orderId", verifyAdmin, control.updateOrder); //done
 /////////delete for admin 
-router.delete('/:orderId', control.deleteOrder); //done
-/////////get all if Ready for Admin
+router.delete('/:orderId',  verifyAdmin,control.deleteOrder); //done
 
 ///add informaion by employee
-router.patch("/info/:orderID",control.updateinfo);//done
+router.patch("/info/:orderID", verifyEmployee,control.updateinfo);//done
 
 module.exports = router;
