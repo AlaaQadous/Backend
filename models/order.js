@@ -29,7 +29,8 @@ const orderSchema = mongoos.Schema({
     },
     date: {
          type: Date,
-         default: Date.now ,
+         default: () => new Date().toISOString().split('T')[0], 
+    get: (val) => val ? val.toISOString().split('T')[0]:null,
     }, 
     comment: {
         type: String,

@@ -6,13 +6,14 @@ const {verifUser}=require('../middleware/verifytoken.js');
 const {verifyAdmin}=require('../middleware/verifytoken.js');
 const{verifyEmployee}=require('../middleware/verifytoken.js');
 
+
+
 /////////////////addorder for customer
 router.post('/addOrder', verifUser,control.addOrder) //done
 //////////يرحعلي حسب الid for customer
 router.get('/:orderID',  verifUser,control.getallbyID); //done 
 
-router.get('/getStates', verifyEmployee,control.getOr); //for employee if inProcess or Ready
-router.get('/getOrderEmpl', verifyEmployee,control.getOrderEmpl); // for employee if new & confirm
+
 
 router.get('/getReady',  verifyAdmin,control.getReady); //for admin
 
@@ -26,5 +27,8 @@ router.delete('/:orderId',  verifyAdmin,control.deleteOrder); //done
 
 ///add informaion by employee
 router.patch("/info/:orderID", verifyEmployee,control.updateinfo);//done
+
+router.get('/getOrderEmpl', verifyEmployee,control.getOrderEmpl); // for employee if new & confirm
+router.get('/getStates', verifyEmployee,control.getOr); //for employee if inProcess or Ready
 
 module.exports = router;

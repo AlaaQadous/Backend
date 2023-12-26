@@ -29,7 +29,6 @@ const upload = multer({
     fileFilter: filefilter,
 });
 
-const uploadMiddleware = upload.single('myfile');
 
 const addOrder = function (req, res, next) {
     upload.single('myfile')(req, res, (err) => {
@@ -46,6 +45,7 @@ const addOrder = function (req, res, next) {
             size: req.body.size,
             image: req.file.path,
             user :req.user.id,
+
         });
 
         order.save()
@@ -68,6 +68,7 @@ const addOrder = function (req, res, next) {
 getAll = function (req, res, next) {
     Order.find({
         state: 'New',
+        confirmed : 'false' ,
     }
     ).
         select('_id description  size image date material').
@@ -281,36 +282,32 @@ getOr = function (req, res, next) {
         });
     
 };
-
 getOrderEmpl = function (req, res, next) {
-
-    Order.find({ 
-        state: { $in: ['New'] },
-        confirmed:'true',
-         })
-        .select('_id description image  size material  ')
+    console.log('Entering getOrderEmpl function');
+         Order.find({ 
+            state: 'New',
+            confirmed : 'true',
+        })
+        .select('_id description image size material  ')
         .then(doc => {
             console.log('Retrieved Orders:', doc);
-
             const response = {
                 doc: doc.map(doc => {
                     return {
                         description: doc.description,
                         image: doc.image,
                         _id: doc._id,
-                       materail: doc.materail,
-                       size:doc.size,
+                        material: doc.material, 
+                        size:doc.size,
                     }
                 })
             }
-
             res.status(200).json({
                 order: response
             });
         })
         .catch(err => {
             console.error('Error Retrieving Orders:', err);
-
             res.status(404).json({
                 message: err
             });
