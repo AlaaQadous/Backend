@@ -173,7 +173,11 @@ deleteByID = function (req, res, next) {
 
 getAllUsers = async function (req, res, next) {
   try {
-    const users = await User.find()
+    const users = await User.find(
+      {
+        role: { $in: ['user', 'employee'] }
+      }
+    )
       .select('_id image userName role email');
 
     const response = {

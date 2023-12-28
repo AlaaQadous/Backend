@@ -155,7 +155,7 @@ deleteOrder = function (req, res, next) {
 ///updateOrder ( confirmed true)
 updateOrder = function (req, res, next) {
     const order = {
-        confirmed : 'true' ,
+        confirmed : true ,
     };
     Order.findOneAndUpdate({ _id: req.params.orderId }, { $set: order }, { new: true }).
         then(result => {
@@ -177,17 +177,16 @@ updateOrder = function (req, res, next) {
         });
 };
 updateinfo = function (req, res, next) {
-    const { comment, price, DeliveryDate } = req.body; 
-
+ console.log('Received PATCH request to /info/:orderID with ID:', req.params.orderID);
+const { comment, price, DeliveryDate } = req.body; 
+console.log('Received data:', { comment, price, DeliveryDate });
     const order = {
-        comment: comment,
-        price: price,
-        DeliveryDate: DeliveryDate,
+        comment:comment,
+        price:price,
+        DeliveryDate:DeliveryDate,
         state:"InProgress",
-        user :req.user.id,
-
+        employee:req.user.id,
     };
-
     Order.findOneAndUpdate({ _id: req.params.orderID }, { $set: order }, { new: true })
         .then(result => {
             if (!result) {
@@ -207,15 +206,12 @@ updateinfo = function (req, res, next) {
             });
         });
 };
-
 getReady = function (req, res, next) {
-
     Order.find({ state: 'Ready' })
-        .populate('user', 'userName')
-        .select('_id description image date price DeliveryDate user ')
+        .select('_id description image date price DeliveryDate user employee')
+        .populate('employee', 'userName') // Populate the 'employee' field with the 'userName'
         .then(doc => {
             console.log('Retrieved Orders:', doc);
-
             const response = {
                 doc: doc.map(doc => {
                     return {
@@ -225,7 +221,8 @@ getReady = function (req, res, next) {
                         date: doc.date,
                         DeliveryDate: doc.DeliveryDate,
                         price: doc.price,
-                        user: doc.user ? doc.user.userName : null,
+                        user: doc.user,
+                        employee: doc.employee.userName ,
                     }
                 })
             }
@@ -241,8 +238,9 @@ getReady = function (req, res, next) {
                 message: err
             });
         });
-    
 };
+
+
 
 
 getOr = function (req, res, next) {
@@ -286,7 +284,7 @@ getOrderEmpl = function (req, res, next) {
     console.log('Entering getOrderEmpl function');
          Order.find({ 
             state: 'New',
-            confirmed : 'true',
+            confirmed : true,
         })
         .select('_id description image size material  ')
         .then(doc => {
@@ -314,6 +312,69 @@ getOrderEmpl = function (req, res, next) {
         });
     
 };
+getAll1 = function (req, res, next) {
+    Order.find({ 
+        state: 'New',
+        confirmed : true,
+    }).
+        select('_id description size image  material').
+        then(doc => {
+            const response = {
+                doc: doc.map(doc => {
+                    return {
+                        description: doc.description,
+                        size: doc.size,
+                        image: doc.image,
+                        _id: doc._id,
+                        material:doc.material,
+                    }
+                })
+            }
+            res.status(200).json({
+                order: response
+            })
+        }).
+        catch(err => {
+            res.status(404).json({
+                message: err
+            })
+        })
+
+};
+getReady1 = function (req, res) {
+    Order.find({ state: 'Ready' })
+      .select('_id description image date employee price DeliveryDate user')
+      .then((doc) => {
+        console.log('Retrieved Orders:', doc);
+        const response = {
+          doc: doc.map((doc) => {
+            return {
+              description: doc.description,
+              image: doc.image,
+              _id: doc._id,
+              date: doc.date,
+              DeliveryDate: doc.DeliveryDate,
+              price: doc.price,
+              user: doc.user,
+              employee: doc.employee ,
+              
+            };
+          }),
+        };
+  
+        res.status(200).json({
+          order: response,
+        });
+      })
+      .catch((err) => {
+        console.error('Error Retrieving Orders:', err);
+  
+        res.status(404).json({
+          message: err,
+        });
+      });
+  };
+  
 module.exports = {
     addOrder: addOrder,
     getAll: getAll,
@@ -324,5 +385,7 @@ module.exports = {
     getReady,
     getOr,
     getOrderEmpl,
+    getAll1,
+    getReady1,
    
 }

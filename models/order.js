@@ -3,9 +3,14 @@ const mongoos = require('mongoose');
 
 const orderSchema = mongoos.Schema({
     user: {
+        
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
      }, 
+     employee:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user',
+     },
     state:{
         type:String,
         enum:['New','InProgress','Ready'],

@@ -24,9 +24,6 @@ require('dotenv').config();
     return res.status(401).json({ message: "No token provided" });
   }
 }
-
-
-
 function verifyAdmin(req,res,next){
     Verify(req,res,()=>{
         if(req.user.isAdmin){
@@ -38,10 +35,6 @@ function verifyAdmin(req,res,next){
         }
     })
 }
-
-
-
-
 function verifyEmployee(req,res,next){
     Verify(req,res,()=>{
         if(req.user.role = "employee"){

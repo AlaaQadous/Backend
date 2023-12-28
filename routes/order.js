@@ -7,6 +7,11 @@ const {verifyAdmin}=require('../middleware/verifytoken.js');
 const{verifyEmployee}=require('../middleware/verifytoken.js');
 
 
+router.get('/get', control.getReady1); //for admin
+
+
+router.get('/1getOrderEmpl', verifyEmployee,control.getAll1); // for employee if new & confirm
+
 
 /////////////////addorder for customer
 router.post('/addOrder', verifUser,control.addOrder) //done
@@ -15,7 +20,6 @@ router.get('/:orderID',  verifUser,control.getallbyID); //done
 
 
 
-router.get('/getReady',  verifyAdmin,control.getReady); //for admin
 
 ///Get all order from database if state is New  for admin
 router.get('/', verifyAdmin, control.getAll); //done
@@ -26,9 +30,9 @@ router.patch("/:orderId", verifyAdmin, control.updateOrder); //done
 router.delete('/:orderId',  verifyAdmin,control.deleteOrder); //done
 
 ///add informaion by employee
-router.patch("/info/:orderID", verifyEmployee,control.updateinfo);//done
+router.put("/info/:orderID", verifyEmployee,control.updateinfo);//done
 
-router.get('/getOrderEmpl', verifyEmployee,control.getOrderEmpl); // for employee if new & confirm
 router.get('/getStates', verifyEmployee,control.getOr); //for employee if inProcess or Ready
+
 
 module.exports = router;
