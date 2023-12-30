@@ -251,20 +251,12 @@ updateByID = async function (req, res) {
 
 
 addEmployee = function (req, res, next) {
-  // Check if the user already exists
-  User.find({ userName: req.body.username }).then(result => {
+  User.find({ email: req.body.email }).then(result => {
     if (result.length < 1) {
-      upload.single('myfile')(req, res, (err) => {
-        if (err) {
-          return res.status(404).json({
-            message: err.message
-          });
-        }
         const user = new User({
           userName: req.body.username,
-          password: req.body.password, // Store plaintext password
+          password: req.body.password, 
           email: req.body.email,
-          image: req.file.path,
           role: 'employee',
         });
         user.save().then(result => {
@@ -277,7 +269,7 @@ addEmployee = function (req, res, next) {
             message: err.message
           });
         });
-      });
+     
     } else {
       res.status(404).json({
         message: "This user already exists"

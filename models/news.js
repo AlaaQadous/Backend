@@ -15,9 +15,9 @@ date: {
 price :{
     type:Number ,
 },
-state:{
-    type:String ,
-    default : "visible",
+visible:{
+    type:Boolean ,
+    default : false,
 }
 });
 module.exports = mongoose.model('new',newsSchema);

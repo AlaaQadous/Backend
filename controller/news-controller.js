@@ -87,6 +87,35 @@ getAll = function (req, res, next) {
         })
 
 };
+getAll1 = function (req, res, next) {
+    News.find(
+        {
+            visible : true ,
+        }
+    ).
+        select('_id description  image ').
+        then(doc => {
+            const response = {
+                doc: doc.map(doc => {
+                    return {
+                        description: doc.description,
+                        image: doc.image,
+                        _id: doc._id,
+                      
+                    }
+                })
+            }
+            res.status(200).json({
+                news: response
+            })
+        }).
+        catch(err => {
+            res.status(404).json({
+                message: err
+            })
+        })
+
+};
 ///////////view by ID
 getallbyID = function (req, res, next) {
     News.find({ _id: req.params.newsID })
@@ -158,7 +187,6 @@ const updateNewsById = function (req, res, next) {
                         message: 'News not found'
                     });
                 }
-
                 res.status(200).json({
                     message: 'News updated successfully',
                     updatedNews: updatedNews
@@ -171,6 +199,28 @@ const updateNewsById = function (req, res, next) {
             });
     });
 };
+const updateNewsById1 = function (req, res, next) {
+    const newsId = req.params.id;
+    const newStateValue = true ; 
+
+    News.findByIdAndUpdate(newsId, { visible: newStateValue }, { new: true })
+        .then(updatedNews => {
+            if (!updatedNews) {
+                return res.status(404).json({
+                    message: 'News not found'
+                });
+            }
+            res.status(200).json({
+                message: 'News updated successfully',
+                updatedNews: updatedNews
+            });
+        })
+        .catch(err => {
+            res.status(500).json({
+                message: err.message
+            });
+        });
+};
 
 
 module.exports = {
@@ -179,4 +229,6 @@ module.exports = {
     getallbyID: getallbyID ,
     deleteNews: deleteNews,
     updateNewsById,
+    getAll1,
+    updateNewsById1
 };
