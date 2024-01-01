@@ -8,7 +8,7 @@ router.post('/addNews', verifyAdmin,cotrol.addnews) //done
 router.get('/', verifyAdmin,cotrol.getAll); //done
 router.delete('/:newsId',verifyAdmin, cotrol.deleteNews); //done
 router.patch('/update/:id', verifyAdmin,cotrol.updateNewsById); //done
-router.patch('/update1/:id', verifyAdmin,cotrol.updateNewsById1); //done
+router.patch('/update1/:id', verifyAdmin,cotrol.updateNewsVisable); //done
 
 
 router.get('/get',cotrol.getAll1); //done

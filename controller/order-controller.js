@@ -1,16 +1,10 @@
 const { getRounds } = require('bcrypt');
 const Order = require('../models/order');
 const multer = require('multer');
+const { uploadImage } = require('../utils/cloudinary');
 
 /////////////////addorder
-const filefilter = function (req, file, cb) {
-    if (file.mimetype === 'image/jpeg') {
-        cb(null, true)
-    }
-    else {
-        cb(new Error('please upload jpeg file'), false)
-    }
-}
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './orderImage/');
@@ -26,7 +20,6 @@ const upload = multer({
     limits: {
         fileSize: 1024 * 1024 * 5
     },
-    fileFilter: filefilter,
 });
 
 
@@ -34,36 +27,46 @@ const addOrder = function (req, res, next) {
     upload.single('myfile')(req, res, (err) => {
         if (err) {
             console.log(err)
-          return res.status(404).json({
-            message: err.message
-          });
+            return res.status(404).json({
+                message: err.message
+            });
         }
-        console.log(req.file);
-        const order = new Order({
-            description: req.body.description,
-            material: req.body.material,
-            size: req.body.size,
-            image: req.file.path,
-            user :req.user.id,
 
-        });
+        const imagepath = req.file ? req.file.path : null;
+        const resultPromise = uploadImage(imagepath);
 
-        order.save()
-            .then(doc => {
-                res.status(200).json({
-                    message: 'Order created successfully',
-                    order: doc
+        resultPromise
+            .then(result => {
+                const order = new Order({
+                    description: req.body.description,
+                    image: result.secure_url,
+                    size: req.body.size,
+                    material:req.body.material,
+                    user: req.user.id,
                 });
+
+                order.save()
+                    .then(doc => {
+                        res.status(200).json({
+                            message: 'Order created successfully',
+                            order: doc
+                        });
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        res.status(500).json({
+                            message: 'Internal Server Error',
+                        });
+                    });
             })
             .catch(error => {
                 console.error(error);
                 res.status(500).json({
-                    message: 'Internal Server Error',
+                    message: 'Error uploading image',
                 });
             });
     });
 };
-
 //get all in database
 getAll = function (req, res, next) {
     Order.find({
@@ -86,6 +89,7 @@ getAll = function (req, res, next) {
                     }
                 })
             }
+            console.log(doc)
             res.status(200).json({
                 order: response
             })
@@ -177,35 +181,40 @@ updateOrder = function (req, res, next) {
         });
 };
 updateinfo = function (req, res, next) {
- console.log('Received PATCH request to /info/:orderID with ID:', req.params.orderID);
-const { comment, price, DeliveryDate } = req.body; 
-console.log('Received data:', { comment, price, DeliveryDate });
-    const order = {
-        comment:comment,
-        price:price,
-        DeliveryDate:DeliveryDate,
-        state:"InProgress",
-        employee:req.user.id,
+    console.log('Received PATCH request to /info/:orderID with ID:', req.params.orderID);
+    const { comment, price, DeliveryDate } = req.body; 
+    console.log('Received data:', { comment, price, DeliveryDate });
+   
+    const orderUpdates = {
+      comment: req.body.comment || undefined,
+      price: req.body.price || undefined,
+      DeliveryDate: req.body.DeliveryDate || undefined,
+      state: "InProgress",
+      employee: req.user.id,
     };
-    Order.findOneAndUpdate({ _id: req.params.orderID }, { $set: order }, { new: true })
-        .then(result => {
-            if (!result) {
-                return res.status(404).json({
-                    message: "Order not found"
-                });
-            }
-            res.status(200).json({
-                message: "Order updated",
-                updatedOrder: result
-            });
-        })
-        .catch(err => {
-            res.status(500).json({
-                message: "Internal server error",
-                error: err
-            });
+   
+    Order.findOneAndUpdate({ _id: req.params.orderID }, { $set: orderUpdates }, { new: true })
+      .then(result => {
+        if (!result) {
+          return res.status(404).json({
+            message: "Order not found"
+          });
+        }
+        console.log('MongoDB Update Result:', result);
+        res.status(200).json({
+          message: "Order updated",
+          updatedOrder: result
         });
-};
+      })
+      .catch(err => {
+        console.error('MongoDB Update Error:', err);
+        res.status(500).json({
+          message: "Internal server error",
+          error: err
+        });
+      });
+   };
+   
 getReady = function (req, res, next) {
     Order.find({ state: 'Ready' })
         .select('_id description image date price DeliveryDate user employee')

@@ -13,7 +13,6 @@ router.post('/signup',Validate,cotrol.singup) //done
 router.post('/signin', Validate,cotrol.singin ); //done
 
 
-
 //view user profile for Admin
 router.route("/profilusers").get( verifyAdmin,cotrol.getAllUsers); //done
 ////// delete for Admin
@@ -22,11 +21,11 @@ router.delete("/deleteuser/:id",verifyAdmin, cotrol.deleteByID); //done
 router.post("/addEmployee",verifyAdmin,cotrol.addEmployee);
 
 
-
 //edit profile for user
 router.route("/profile/:id")
-.get( verifUser,cotrol.getByID)
-.put(verifUser, cotrol.updateByID);
+.get( verifUser,cotrol.getByID)  
+.put(verifUser, cotrol.updateByID); ///بدها تعديل للصورة
+
 
 
 

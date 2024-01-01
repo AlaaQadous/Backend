@@ -1,21 +1,14 @@
 const News =require('../models/news');
 const multer = require('multer');
-
+const { uploadImage } = require('../utils/cloudinary');
 /////////////////addnews
-const filefilter = function (req, file, cb) {
-    if (file.mimetype === 'image/jpeg') {
-        cb(null, true)
-    }
-    else {
-        cb(new Error('please upload jpeg file'), false)
-    }
-}
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './newsImage/');
     },
     filename: function (req, file, cb) {
-        cb(null, new Date().toDateString() + file.originalname);
+        cb(null,new Date().toDateString() + file.originalname);
     },
 
 });
@@ -24,7 +17,6 @@ const upload = multer({
     limits: {
         fileSize: 1024 * 1024 * 5
     },
-    fileFilter: filefilter,
 });
 const uploadMiddleware = upload.single('myfile');
 
@@ -32,50 +24,63 @@ const uploadMiddleware = upload.single('myfile');
 const addnews = function (req, res, next) {
     uploadMiddleware(req, res, function (err) {
         if (err) {
-            // Handle multer error (e.g., file type not allowed, file size exceeded)
             return res.status(400).json({
-                 message: 'File upload error', error: err.message 
-                });
+                message: 'File upload error', error: err.message
+            });
         }
-
-        // Continue processing the request
-        console.log(req.file);
-        const news = new News({
-            description: req.body.description,
-            image: req.file.path,
-
-        });
-
-        news.save()
-            .then(doc => {
-                res.status(200).json({
-                    message: 'News created successfully',
-                    news: doc
+        const imagepath = req.file.path;
+        console.log('Image Path:', imagepath);
+        const resultPromise = uploadImage(imagepath);
+        console.log(resultPromise)
+        resultPromise
+            .then(result => {
+                console.log(req.file);
+                console.log(result);
+                const news = new News({
+                    description: req.body.description,
+                    image: result.secure_url,
                 });
+
+                news.save()
+                    .then(doc => {
+                        console.log( "news"+news);
+                        res.status(200).json({
+                            message: 'News created successfully',
+                            news: doc
+                        });
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        res.status(500).json({
+                            message: 'Internal Server Error',
+                        });
+                    });
             })
             .catch(error => {
                 console.error(error);
                 res.status(500).json({
-                    message: 'Internal Server Error',
+                    message: 'Error uploading image',
                 });
             });
     });
 };
+
 ///////////////////view all 
-getAll = function (req, res, next) {
+getAll = function (req, res) {
     News.find().
-        select('_id description  image ').
+        select('_id description image visible').
         then(doc => {
             const response = {
                 doc: doc.map(doc => {
                     return {
                         description: doc.description,
-                        image: doc.image,
+                        image:doc.image,
                         _id: doc._id,
-                      
+                        visible: doc.visible,
                     }
                 })
             }
+            console.log(doc);
             res.status(200).json({
                 news: response
             })
@@ -85,8 +90,9 @@ getAll = function (req, res, next) {
                 message: err
             })
         })
-
 };
+
+
 getAll1 = function (req, res, next) {
     News.find(
         {
@@ -170,39 +176,75 @@ const updateNewsById = function (req, res, next) {
             });
         }
 
-        console.log(req.file);
-
         const updateFields = {
             description: req.body.description,
         };
 
         if (req.file && req.file.path) {
-            updateFields.image = req.file.path;
-        }
+            const resultPromise = uploadImage(req.file.path);
 
-        News.findByIdAndUpdate(newsId, updateFields, { new: true })
-            .then(updatedNews => {
-                if (!updatedNews) {
-                    return res.status(404).json({
-                        message: 'News not found'
+            resultPromise
+                .then(result => {
+                    updateFields.image = result.secure_url;
+
+                    News.findOneAndUpdate({ _id: newsId }, updateFields, { new: true })
+                        .then(updatedNews => {
+                            if (!updatedNews) {
+                                return res.status(404).json({
+                                    message: 'News not found'
+                                });
+                            }
+
+                            res.status(200).json({
+                                message: 'News updated successfully',
+                                updatedNews: updatedNews
+                            });
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            res.status(500).json({
+                                message: 'Internal Server Error',
+                            });
+                        });
+                })
+                .catch(err => {
+                    res.status(500).json({
+                        message: err.message
                     });
-                }
-                res.status(200).json({
-                    message: 'News updated successfully',
-                    updatedNews: updatedNews
                 });
-            })
-            .catch(err => {
-                res.status(500).json({
-                    message: err.message
+        } else {
+            // Update only the description if no new image is provided
+            News.findOneAndUpdate({ _id: newsId }, { description: req.body.description }, { new: true })
+                .then(updatedNews => {
+                    if (!updatedNews) {
+                        return res.status(404).json({
+                            message: 'News not found'
+                        });
+                    }
+
+                    res.status(200).json({
+                        message: 'News updated successfully',
+                        updatedNews: updatedNews
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                    res.status(500).json({
+                        message: 'Internal Server Error',
+                    });
                 });
-            });
+        }
     });
 };
-const updateNewsById1 = function (req, res, next) {
+
+const updateNewsVisable = function (req, res, next) {
     const newsId = req.params.id;
     const newStateValue = true ; 
-
+    if (!newsId) {
+        return res.status(400).json({
+          message: 'Invalid newsId',
+        });
+      }
     News.findByIdAndUpdate(newsId, { visible: newStateValue }, { new: true })
         .then(updatedNews => {
             if (!updatedNews) {
@@ -230,5 +272,5 @@ module.exports = {
     deleteNews: deleteNews,
     updateNewsById,
     getAll1,
-    updateNewsById1
+    updateNewsVisable
 };
