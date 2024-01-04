@@ -16,7 +16,7 @@ router.get('/1getOrderEmpl', verifyEmployee,control.getAll1); // for employee if
 /////////////////addorder for customer
 router.post('/addOrder', verifUser,control.addOrder) //done
 //////////يرحعلي حسب الid for customer
-router.get('/:orderID',  verifUser,control.getallbyID); //done 
+router.get('/get1',verifUser, control.getByIduser); //done 
 
 
 

@@ -2,6 +2,8 @@ const { getRounds } = require('bcrypt');
 const Order = require('../models/order');
 const multer = require('multer');
 const { uploadImage } = require('../utils/cloudinary');
+const { default: mongoose } = require('mongoose');
+const mongoos = require('mongoose');
 
 /////////////////addorder
 
@@ -180,45 +182,54 @@ updateOrder = function (req, res, next) {
             });
         });
 };
-updateinfo = function (req, res, next) {
+const updateinfo = async function (req, res, next) {
     console.log('Received PATCH request to /info/:orderID with ID:', req.params.orderID);
     const { comment, price, DeliveryDate } = req.body; 
     console.log('Received data:', { comment, price, DeliveryDate });
-   
-    const orderUpdates = {
-      comment: req.body.comment || undefined,
-      price: req.body.price || undefined,
-      DeliveryDate: req.body.DeliveryDate || undefined,
-      state: "InProgress",
-      employee: req.user.id,
-    };
-   
-    Order.findOneAndUpdate({ _id: req.params.orderID }, { $set: orderUpdates }, { new: true })
-      .then(result => {
-        if (!result) {
-          return res.status(404).json({
-            message: "Order not found"
-          });
+    
+    try {
+        let employeeName = '';
+        if (req.user.id) {
+            const user = await mongoose.model('user').findById(req.user.id);
+            if (user) {
+                employeeName = user.userName; 
+            }
         }
+
+        const orderUpdates = {
+            comment: req.body.comment || undefined,
+            price: req.body.price || undefined,
+            DeliveryDate: req.body.DeliveryDate || undefined,
+            state: "InProgress",
+            employeeName: employeeName,
+        };
+
+        const result = await Order.findOneAndUpdate({ _id: req.params.orderID }, { $set: orderUpdates }, { new: true });
+
+        if (!result) {
+            return res.status(404).json({
+                message: "Order not found"
+            });
+        }
+
         console.log('MongoDB Update Result:', result);
         res.status(200).json({
-          message: "Order updated",
-          updatedOrder: result
+            message: "Order updated",
+            updatedOrder: result
         });
-      })
-      .catch(err => {
-        console.error('MongoDB Update Error:', err);
+    } catch (error) {
+        console.error('MongoDB Update Error:', error);
         res.status(500).json({
-          message: "Internal server error",
-          error: err
+            message: "Internal server error",
+            error: error
         });
-      });
-   };
+    }
+};
+
    
-getReady = function (req, res, next) {
+getReady = function (req, res,) {
     Order.find({ state: 'Ready' })
-        .select('_id description image date price DeliveryDate user employee')
-        .populate('employee', 'userName') // Populate the 'employee' field with the 'userName'
+        .select('_id description image date price DeliveryDate user employeeName')
         .then(doc => {
             console.log('Retrieved Orders:', doc);
             const response = {
@@ -231,7 +242,7 @@ getReady = function (req, res, next) {
                         DeliveryDate: doc.DeliveryDate,
                         price: doc.price,
                         user: doc.user,
-                        employee: doc.employee.userName ,
+                        employeeName: doc.employeeName ,
                     }
                 })
             }
@@ -248,8 +259,6 @@ getReady = function (req, res, next) {
             });
         });
 };
-
-
 
 
 getOr = function (req, res, next) {
@@ -352,7 +361,7 @@ getAll1 = function (req, res, next) {
 };
 getReady1 = function (req, res) {
     Order.find({ state: 'Ready' })
-      .select('_id description image date employee price DeliveryDate user')
+      .select('_id description image date employeeName price DeliveryDate user')
       .then((doc) => {
         console.log('Retrieved Orders:', doc);
         const response = {
@@ -365,7 +374,7 @@ getReady1 = function (req, res) {
               DeliveryDate: doc.DeliveryDate,
               price: doc.price,
               user: doc.user,
-              employee: doc.employee ,
+              employeeName: doc.employeeName ,
               
             };
           }),
@@ -384,6 +393,38 @@ getReady1 = function (req, res) {
       });
   };
   
+
+getByIduser = function (req, res, next) {
+    const userId = req.user.id; 
+    Order.find({ user: userId }) 
+        .select('_id description image date price DeliveryDate state comment')
+        .then(orders => {
+            if (orders.length === 0) {
+                return res.status(404).json({ message: 'No orders found for the user' });
+            }
+            console.log('Retrieved Orders:', orders);
+
+            const response = {
+                orders: orders.map(order => ({
+                    description: order.description,
+                    image: order.image,
+                    _id: order._id,
+                    date: order.date,
+                    DeliveryDate: order.DeliveryDate,
+                    price: order.price,
+                    state: order.state,
+                    comment: order.comment,
+                }))
+            };
+
+            res.status(200).json(response);
+        })
+        .catch(err => {
+            console.error('Error Retrieving Orders:', err);
+            res.status(500).json({ message: 'Internal Server Error' });
+        });
+};
+
 module.exports = {
     addOrder: addOrder,
     getAll: getAll,
@@ -396,5 +437,6 @@ module.exports = {
     getOrderEmpl,
     getAll1,
     getReady1,
+    getByIduser,
    
 }

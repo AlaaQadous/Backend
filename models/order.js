@@ -45,8 +45,14 @@ const orderSchema = mongoos.Schema({
       },
       DeliveryDate : {
         type: Date,
-      },
- 
+        get: (val) => val ? val.toISOString().split('T')[0]:null,
 
+      },
+      employeeName :{
+       type: String ,
+      }
 })
+
+
+
 module.exports = mongoose.model('order',orderSchema);

@@ -64,7 +64,6 @@ const addnews = function (req, res, next) {
             });
     });
 };
-
 ///////////////////view all 
 getAll = function (req, res) {
     News.find().
@@ -91,8 +90,6 @@ getAll = function (req, res) {
             })
         })
 };
-
-
 getAll1 = function (req, res, next) {
     News.find(
         {
@@ -164,7 +161,6 @@ deleteNews = function (req, res, next) {
             });
         });
 };
- 
 const updateNewsById = function (req, res, next) {
     const newsId = req.params.id;
 
@@ -236,16 +232,29 @@ const updateNewsById = function (req, res, next) {
         }
     });
 };
-
-const updateNewsVisable = function (req, res, next) {
+const updateNewsVisible = function (req, res, next) {
     const newsId = req.params.id;
-    const newStateValue = true ; 
+    const new1 = false;
+    let newStateValue;
+
     if (!newsId) {
         return res.status(400).json({
-          message: 'Invalid newsId',
+            message: 'Invalid newsId',
         });
-      }
-    News.findByIdAndUpdate(newsId, { visible: newStateValue }, { new: true })
+    }
+
+    News.findById(newsId)
+        .then(news => {
+            if (!news) {
+                return res.status(404).json({
+                    message: 'News not found'
+                });
+            }
+
+            newStateValue = news.visible ? new1 : !newStateValue;
+
+            return News.findByIdAndUpdate(newsId, { visible: newStateValue }, { new: true });
+        })
         .then(updatedNews => {
             if (!updatedNews) {
                 return res.status(404).json({
@@ -272,5 +281,5 @@ module.exports = {
     deleteNews: deleteNews,
     updateNewsById,
     getAll1,
-    updateNewsVisable
+    updateNewsVisible,
 };

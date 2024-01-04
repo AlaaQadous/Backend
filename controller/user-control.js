@@ -191,7 +191,6 @@ deleteByID = function (req, res, next) {
     })
 };
 
-
 getAllUsers = async function (req, res, next) {
   try {
     const users = await User.find(
@@ -225,6 +224,7 @@ getAllUsers = async function (req, res, next) {
   }
 };
 
+
 updateByID = async function (req, res) {
   try {
     upload.single('myfile')(req, res, async function (err) {
@@ -236,8 +236,6 @@ updateByID = async function (req, res) {
       }
 
       const { username, password, email } = req.body;
-
-
       if (password) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -245,23 +243,36 @@ updateByID = async function (req, res) {
         req.body.password = hashedPassword;
       }
 
-      const updatedUser = await User.findOneAndUpdate(
-        { _id: req.params.id },
-        {
-          $set: {
-            username,
-            password: req.body.password,
-            email,
-            image: req.file.path
-          }
-        },
-        { new: true }
-      ).select("-password");
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      const resultPromise = uploadImage(req.file.path); 
 
-      res.status(200).json(updatedUser);
+      resultPromise
+        .then(async result => {
+          const updatedUser = await User.findOneAndUpdate(
+            { _id: req.user.id },
+            {
+              $set: {
+                username,
+                password: req.body.password,
+                email,
+                image: result.secure_url
+              }
+            },
+            { new: true }
+          ).select("-password");
+
+          if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+          }
+
+          res.status(200).json(updatedUser);
+        })
+        .catch(error => {
+          console.error(error);
+          res.status(500).json({
+            message: 'Error uploading image to Cloudinary',
+            error: error.message
+          });
+        });
     });
   } catch (error) {
     console.error(error);
@@ -270,13 +281,16 @@ updateByID = async function (req, res) {
 };
 
 
-addEmployee = function (req, res, next) {
+addEmployee = function (req, res) {
+  const { username, password, email } = req.body;
+console.log("formData", username, password, email);
+
   User.find({ email: req.body.email }).then(result => {
     if (result.length < 1) {
         const user = new User({
           userName: req.body.username,
-          password: req.body.password, 
           email: req.body.email,
+          password: req.body.password, 
           role: 'employee',
         });
         user.save().then(result => {
@@ -313,6 +327,32 @@ getUsersCount = async function (req, res) {
 };
 
 
+getImage = function (req, res) {
+  if(req.user.id){
+    console.log("found")
+  }
+User.find({ _id: req.user.id})
+  .select(' image')
+  .then(doc => {
+    const response = {
+      doc: doc.map(doc => {
+        return {
+          image: doc.image,
+        }
+      })
+    }
+    res.status(200).json({
+      user: response
+    });
+  })
+  .catch(err => {
+    console.error(err);
+    res.status(500).json({
+      message: "Internal Server Error"
+    });
+  });
+}
+
 
 module.exports = {
   singup,
@@ -323,7 +363,8 @@ module.exports = {
   getAllUsers,
   updateByID,
   getUsersCount,
-  addEmployee
+  addEmployee,
+  getImage,
 
 
 }
