@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 1024 * 1024 * 5
+        fileSize: 1024 * 1024 * 2
     },
 });
 
@@ -43,10 +43,12 @@ const addOrder = function (req, res, next) {
                     description: req.body.description,
                     image: result.secure_url,
                     size: req.body.size,
+                    lengthValue:req.body.lengthValue,
+                    widthValue:req.body.widthValue,
                     material:req.body.material,
                     user: req.user.id,
                 });
-
+console.log(order)
                 order.save()
                     .then(doc => {
                         res.status(200).json({
@@ -76,7 +78,7 @@ getAll = function (req, res, next) {
         confirmed : 'false' ,
     }
     ).
-        select('_id description  size image date material').
+        select('_id description lengthValue widthValue image date material').
         then(doc => {
             const response = {
                 doc: doc.map(doc => {
@@ -87,6 +89,8 @@ getAll = function (req, res, next) {
                         _id: doc._id,
                         date:doc.date,
                         material:doc.material,
+                        lengthValue :doc.lengthValue,
+                        widthValue :doc.widthValue
 
                     }
                 })
@@ -225,8 +229,7 @@ const updateinfo = async function (req, res, next) {
         });
     }
 };
-
-   
+ 
 getReady = function (req, res,) {
     Order.find({ state: 'Ready' })
         .select('_id description image date price DeliveryDate user employeeName')
@@ -260,14 +263,13 @@ getReady = function (req, res,) {
         });
 };
 
-
 getOr = function (req, res, next) {
 
     Order.find({ 
         state: { $in: ['Ready', 'InProgress'] }
          })
         .populate('user', 'userName')
-        .select('_id description image date price DeliveryDate user ')
+        .select('_id description image date price DeliveryDate user state ')
         .then(doc => {
             console.log('Retrieved Orders:', doc);
 
@@ -281,6 +283,7 @@ getOr = function (req, res, next) {
                         DeliveryDate: doc.DeliveryDate,
                         price: doc.price,
                         user: doc.user ? doc.user.userName : null,
+                        state : doc.state ,
                     }
                 })
             }
@@ -335,13 +338,14 @@ getAll1 = function (req, res, next) {
         state: 'New',
         confirmed : true,
     }).
-        select('_id description size image  material').
+        select('_id description  widthValue  lengthValue image  material').
         then(doc => {
             const response = {
                 doc: doc.map(doc => {
                     return {
                         description: doc.description,
-                        size: doc.size,
+                        lengthValue:doc.lengthValue,
+                        widthValue:doc.widthValue,
                         image: doc.image,
                         _id: doc._id,
                         material:doc.material,
@@ -393,7 +397,6 @@ getReady1 = function (req, res) {
       });
   };
   
-
 getByIduser = function (req, res, next) {
     const userId = req.user.id; 
     Order.find({ user: userId }) 
@@ -424,7 +427,31 @@ getByIduser = function (req, res, next) {
             res.status(500).json({ message: 'Internal Server Error' });
         });
 };
-
+const updateReady = function (req, res, next) {
+    const order = {
+      state: 'Ready',
+    };
+  
+    Order.findOneAndUpdate({ _id: req.params.orderId }, { $set: order }, { new: true })
+      .then(result => {
+        if (!result) {
+          return res.status(404).json({
+            message: "Order not found"
+          });
+        }
+  
+        return res.status(200).json({
+          message: "Order updated",
+          updatedOrder: result
+        });
+      })
+      .catch(err => {
+        return res.status(500).json({
+          message: "Internal server error",
+          error: err
+        });
+      });
+  };
 module.exports = {
     addOrder: addOrder,
     getAll: getAll,
@@ -438,5 +465,5 @@ module.exports = {
     getAll1,
     getReady1,
     getByIduser,
-   
+    updateReady
 }

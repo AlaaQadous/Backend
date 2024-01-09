@@ -24,10 +24,13 @@ router.get('/get1',verifUser, control.getByIduser); //done
 ///Get all order from database if state is New  for admin
 router.get('/', verifyAdmin, control.getAll); //done
 
+//Ready order 
+router.patch("/orders/:orderId", verifUser, control.updateReady); //done
+
 //////////confirmed  for Admin
 router.patch("/:orderId", verifyAdmin, control.updateOrder); //done
 /////////delete for admin 
-router.delete('/:orderId',  verifyAdmin,control.deleteOrder); //done
+router.delete('/:orderId',control.deleteOrder); //done
 
 ///add informaion by employee
 router.put("/info/:orderID", verifyEmployee,control.updateinfo);//done

@@ -284,6 +284,19 @@ updateByID = async function (req, res) {
 addEmployee = function (req, res) {
   const { username, password, email } = req.body;
 console.log("formData", username, password, email);
+console.log("Received request body:", req.body);
+
+upload.single('myfile')(req, res, (err) => {
+  if (err) {
+      return res.status(400).json({
+          message: 'File upload error',
+          error: err.message
+      });
+  }
+});
+
+  const imagepath = req.file ? req.file.path : null;
+  const resultPromise = uploadImage(imagepath);
 
   User.find({ email: req.body.email }).then(result => {
     if (result.length < 1) {
@@ -292,6 +305,7 @@ console.log("formData", username, password, email);
           email: req.body.email,
           password: req.body.password, 
           role: 'employee',
+          myfile :resultPromise.secure_url,
         });
         user.save().then(result => {
           console.log(result);

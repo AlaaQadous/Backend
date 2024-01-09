@@ -19,6 +19,7 @@ const orderSchema = mongoos.Schema({
     image:{
         type:String,
     },
+   
     confirmed:{
         type:Boolean,
         default :false ,
@@ -26,7 +27,10 @@ const orderSchema = mongoos.Schema({
     material:{
      type:String,
     },
-    size:{
+    lengthValue:{
+        type:Number,
+    } ,
+    widthValue:{
         type:Number,
     },
     description:{
