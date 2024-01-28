@@ -13,8 +13,8 @@ const orderSchema = mongoos.Schema({
      },
     state:{
         type:String,
-        enum:['New','InProgress','Ready'],
-        default: "New",
+        enum:['fresh','New','InProgress','Ready'],
+        default:'fresh',
     },
     image:{
         type:String,

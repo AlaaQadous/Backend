@@ -74,7 +74,7 @@ console.log(order)
 //get all in database
 getAll = function (req, res, next) {
     Order.find({
-        state: 'New',
+        state: 'fresh',
         confirmed : 'false' ,
     }
     ).
@@ -166,6 +166,7 @@ deleteOrder = function (req, res, next) {
 updateOrder = function (req, res, next) {
     const order = {
         confirmed : true ,
+        state : 'New',
     };
     Order.findOneAndUpdate({ _id: req.params.orderId }, { $set: order }, { new: true }).
         then(result => {

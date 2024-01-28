@@ -12,9 +12,6 @@ date: {
     type: Date,
     default: Date.now ,
 },
-price :{
-    type:Number ,
-},
 visible:{
     type:Boolean ,
     default : false,
