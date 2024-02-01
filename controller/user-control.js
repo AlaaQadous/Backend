@@ -235,7 +235,7 @@ updateByID = async function (req, res) {
         });
       }
 
-      const { username, password, email } = req.body;
+      const { userName, password, email } = req.body;
       if (password) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -243,36 +243,58 @@ updateByID = async function (req, res) {
         req.body.password = hashedPassword;
       }
 
-      const resultPromise = uploadImage(req.file.path); 
+      const resultPromise = req.file ? uploadImage(req.file.path) : null;
 
-      resultPromise
-        .then(async result => {
-          const updatedUser = await User.findOneAndUpdate(
-            { _id: req.user.id },
-            {
-              $set: {
-                username,
-                password: req.body.password,
-                email,
-                image: result.secure_url
-              }
-            },
-            { new: true }
-          ).select("-password");
+      if (resultPromise) {
+        resultPromise
+          .then(async result => {
+            const updatedUser = await User.findOneAndUpdate(
+              { _id: req.user.id },
+              {
+                $set: {
+                  userName,
+                  password: req.body.password,
+                  email,
+                  image: result.secure_url
+                }
+              },
+              { new: true }
+            ).select("-password");
 
-          if (!updatedUser) {
-            return res.status(404).json({ message: "User not found" });
-          }
+            if (!updatedUser) {
+              return res.status(404).json({ message: "User not found" });
+            }
 
-          res.status(200).json(updatedUser);
-        })
-        .catch(error => {
-          console.error(error);
-          res.status(500).json({
-            message: 'Error uploading image to Cloudinary',
-            error: error.message
+            res.status(200).json(updatedUser);
+          })
+          .catch(error => {
+            console.error(error);
+            res.status(500).json({
+              message: 'Error uploading image to Cloudinary',
+              error: error.message
+            });
           });
-        });
+      } else {
+        // Handle the case when there is no file to upload
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: req.user.id },
+          {
+            $set: {
+              userName,
+              password: req.body.password,
+              email
+              // You might want to decide what to do with the 'image' field in this case
+            }
+          },
+          { new: true }
+        ).select("-password");
+
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json(updatedUser);
+      }
     });
   } catch (error) {
     console.error(error);
@@ -346,12 +368,14 @@ getImage = function (req, res) {
     console.log("found")
   }
 User.find({ _id: req.user.id})
-  .select(' image')
+  .select('userName email image')
   .then(doc => {
     const response = {
       doc: doc.map(doc => {
         return {
           image: doc.image,
+          email :doc.email , 
+          userName: doc.userName ,
         }
       })
     }
@@ -359,6 +383,7 @@ User.find({ _id: req.user.id})
       user: response
     });
   })
+
   .catch(err => {
     console.error(err);
     res.status(500).json({
